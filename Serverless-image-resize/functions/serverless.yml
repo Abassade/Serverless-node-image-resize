@@ -1,0 +1,38 @@
+service: image-resize-on-the-fly-functions
+
+plugins:
+  - serverless-plugin-tracing
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: ${env:STAGE, 'dev'}
+  profile: serverless-admin
+  tracing: true
+  region: ${env:REGION, 'us-east-1'}
+  environment:
+    BUCKET: ${env:BUCKET}
+    REGION: ${env:REGION}
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "s3:ListBucket"
+      Resource: "arn:aws:s3:::${env:BUCKET}"
+    - Effect: "Allow"
+      Action:
+        - "s3:PutObject"
+      Resource: "arn:aws:s3:::${env:BUCKET}"
+    - Effect: "Allow"
+      Action:
+        - "xray:PutTraceSegments"
+        - "xray:PutTelemetryRecords"
+      Resource:
+        - "*"
+
+functions:
+  resize:
+    handler: resize.handler
+    events:
+      - http:
+          path: resize
+          method: get
